@@ -26,13 +26,12 @@ async function run() {
   try {
     const catorgoryCollection = client.db("oldBagShop").collection("product");
     const usersCollection = client.db("oldBagShop").collection("users");
-
-
-    app.get("/product", async(req,res)=>{
-     const query = {};
-     const options = await catorgoryCollection.find(query).toArray();
-     res.send(options);
-    })
+    const bookingCollection = client.db("oldBagShop").collection('booking')
+      app.get("/product", async (req, res) => {
+        const query = {};
+        const options = await catorgoryCollection.find(query).toArray();
+        res.send(options);
+      });
 
     // Save user email & generate JWT
     app.put("/user/:email", async (req, res) => {
@@ -56,6 +55,28 @@ async function run() {
       console.log(token);
       res.send({ result, token });
     });
+
+
+    app.post("/bookings", async (req, res) => {
+      const booking = req.body;
+      // console.log(booking);
+      // const query = {
+      //   appointmentDate: booking.appointmentDate,
+      //   email: booking.email,
+      //   treatment: booking.treatment,
+      // };
+
+      // const alreadyBooked = await bookingCollection.find(query).toArray();
+
+      // if (alreadyBooked.length) {
+      //   const message = `You already have a booking on ${booking.appointmentDate}`;
+      //   return res.send({ acknowledged: false, message });
+      // }
+
+      const result = await bookingCollection.insertOne(booking);
+      res.send(result);
+    });
+
 
     console.log("Database Connected...");
   } finally {
