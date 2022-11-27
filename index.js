@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
+const { MongoClient, ServerApiVersion} = require("mongodb");
 require("dotenv").config();
 
 const app = express();
@@ -21,11 +22,40 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-
 async function run() {
   try {
-    const userCollection = client.db("oldBagShop").collection("users");
+    const catorgoryCollection = client.db("oldBagShop").collection("product");
+    const usersCollection = client.db("oldBagShop").collection("users");
 
+
+    app.get("/product", async(req,res)=>{
+     const query = {};
+     const options = await catorgoryCollection.find(query).toArray();
+     res.send(options);
+    })
+
+    // Save user email & generate JWT
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      console.log(result);
+
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1d",
+      });
+      console.log(token);
+      res.send({ result, token });
+    });
 
     console.log("Database Connected...");
   } finally {
@@ -33,6 +63,8 @@ async function run() {
 }
 
 run().catch((err) => console.error(err));
+
+
 
 
 
