@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 
-
+//database connect
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.781yldu.mongodb.net/?retryWrites=true&w=majority`;
 
 console.log(uri);
@@ -22,16 +22,34 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+
+
+// Decode JWT
+
+
+// function verifyJWT(req, res, next) {
+//   const authHeader = req.headers.authorization
+
+//   if (!authHeader) {
+//     return res.status(401).send({ message: 'unauthorized access' })
+//   }
+//   const token = authHeader.split(' ')[1]
+
+//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+//     if (err) {
+//       return res.status(403).send({ message: 'Forbidden access' })
+//     }
+//     console.log(decoded)
+//     req.decoded = decoded
+//     next()
+//   })
+// }
+
 async function run() {
   try {
     const catorgoryCollection = client.db("oldBagShop").collection("product");
     const usersCollection = client.db("oldBagShop").collection("users");
-    const bookingCollection = client.db("oldBagShop").collection('booking')
-      app.get("/product", async (req, res) => {
-        const query = {};
-        const options = await catorgoryCollection.find(query).toArray();
-        res.send(options);
-      });
+    const bookingCollection = client.db("oldBagShop").collection("booking");
 
     // Save user email & generate JWT
     app.put("/user/:email", async (req, res) => {
@@ -47,48 +65,53 @@ async function run() {
         updateDoc,
         options
       );
+
       console.log(result);
 
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "1d",
       });
+
       console.log(token);
+
       res.send({ result, token });
     });
 
-    app.get('/bookings', async(req,res)=>{
+    app.get("/product", async (req, res) => {
+      const query = {};
+      const options = await catorgoryCollection.find(query).toArray();
+      res.send(options);
+    });
+
+    app.get("/bookings", async (req, res) => {
       const email = req.query.email;
-      const query = {email: email};
+      const query = { email: email };
       const booking = await bookingCollection.find(query).toArray();
       res.send(booking);
-
-    })
-
-
+    });
 
     app.post("/bookings", async (req, res) => {
       const booking = req.body;
-      // console.log(booking);
-      // const query = {
-      //   appointmentDate: booking.appointmentDate,
-      //   email: booking.email,
-      //   treatment: booking.treatment,
-      // };
-
-      // const alreadyBooked = await bookingCollection.find(query).toArray();
-
-      // if (alreadyBooked.length) {
-      //   const message = `You already have a booking on ${booking.appointmentDate}`;
-      //   return res.send({ acknowledged: false, message });
-      // }
 
       const result = await bookingCollection.insertOne(booking);
       res.send(result);
     });
 
 
-    console.log("Database Connected...");
-  } finally {
+    
+
+    //user and admin
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // console.log("Database Connected...");
+  }
+   finally {
   }
 }
 
