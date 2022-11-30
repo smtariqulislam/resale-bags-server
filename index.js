@@ -66,13 +66,13 @@ async function run() {
         options
       );
 
-      console.log(result);
+      // console.log(result);
 
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "1d",
       });
 
-      console.log(token);
+      // console.log(token);
 
       res.send({ result, token });
     });
@@ -97,10 +97,32 @@ async function run() {
       res.send(result);
     });
 
+      
+      /*
 
-    
+                user and admin routes
+      
+      
+      */
 
-    //user and admin
+    // Get A Single User
+    app.get("/user/:email",  async (req, res) => {
+      const email = req.params.email;
+      // const decodedEmail = req.decoded.email;
+
+      // if (email !== decodedEmail) {
+      //   return res.status(403).send({ message: "forbidden access" });
+      // }
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      res.send(user);
+    });
+
+    app.get("/users", async (req, res) => {
+      const query = {};
+      const users = await usersCollection.find(query).toArray();
+      res.send(users);
+    });
 
     app.post("/users", async (req, res) => {
       const user = req.body;
